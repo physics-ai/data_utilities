@@ -49,7 +49,7 @@ def get_labels(fname):
         Returns three arrays: coords, chips, and classes corresponding to the
             coordinates, file-names, and classes for each ground truth.
     """
-    with open(fname) as f:
+    with open(fname, "r") as f:
         data = json.load(f)
 
     coords = np.zeros((len(data['features']),4))
