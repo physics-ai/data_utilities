@@ -36,9 +36,7 @@ logger = logging.getLogger("analyzexView")
 def main():
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--pos_image_folder", help="Path to folder containing positive nwpu .jpg images", required=True)
 	parser.add_argument("--metadata_file", help="Filepath to folder containing ground truth .txt files ", required=True)
-	parser.add_argument("--output_file", help="metadata file to write from the chipped images", required=True)
 	parser.add_argument("--debug", help="Debug mode", default=False, action='store_true')
 	args = parser.parse_args()
 
@@ -51,12 +49,12 @@ def main():
 	logger.info(args)
 	# logger.info("Tensorflow version: %s" % tf.pywrap_tensorflow.__version__)
 
-	if args.pos_image_folder:
-		if not os.path.exists(args.pos_image_folder):
-			raise ValueError("--pos_image_folder=%s does not exist.", args.pos_image_folder)
+	# if args.pos_image_folder:
+	# 	if not os.path.exists(args.pos_image_folder):
+	# 		raise ValueError("--pos_image_folder=%s does not exist.", args.pos_image_folder)
 
-		if not os.path.isdir(args.pos_image_folder):
-			raise ValueError("--pos_image_folder=%s is not a directory.", args.pos_image_folder)
+	# 	if not os.path.isdir(args.pos_image_folder):
+	# 		raise ValueError("--pos_image_folder=%s is not a directory.", args.pos_image_folder)
 
 	if args.metadata_file:
 		if not os.path.exists(args.metadata_file):
