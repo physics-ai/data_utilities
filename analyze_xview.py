@@ -65,12 +65,14 @@ def main():
 	airplane_x_coord = []
 	airplane_y_coord = []
 	airplane_area_norm = []
+	airplane_area_pix = []
 	airplanes_per_image = []
 	# loop through the lines in the metadata file
 	with open(args.metadata_file, 'r') as metadata_file:
 		line = metadata_file.readline()
 		while line:
 			line_counter += 1
+
 			if line_counter % 100 == 0:
 				logger.info("Read in {} lines".format(line_counter))
 
@@ -96,7 +98,12 @@ def main():
 
 			
 			assert len(fields)==(5*num_objects+4), "Insufficient data items in %s at line %d" % (metadata_file_path, i)
-			
+
+
+			# Get an image to store the image size in order to compute area in pixels. 
+			if line_counter == 1:
+				im = Image.open(image_path)
+				im_w_pix, im_h_pix = im.size
 
 
 			# normalize object labels     
@@ -121,6 +128,10 @@ def main():
 				airplane_h_norm = float(fields[obj_idx+4])
 				airplane_area_norm.append(airplane_w_norm * airplane_h_norm)
 
+				airplane_w_pix = int(airplane_w_norm * im_w_pix)
+				airplane_h_pix = int(airplane_h_norm * im_h_pix)
+				airplane_area_pix.append(airplane_w_pix * airplane_h_pix)
+
 
 			line = metadata_file.readline()
 
@@ -138,11 +149,11 @@ def main():
 	airplane_area_norm = np.array(airplane_area_norm)
 	
 	logger.info("     mean area (normalized):    %f" % (np.mean(airplane_area_norm)))
-	logger.info("      std area (normalized):     %f" % (np.std(airplane_area_norm)))
-	#logger.info("     mean area (pixels):        %f" % (np.mean(airplane_area_pix)))
-	#mean_square_pix = round(np.sqrt(np.mean(airplane_area_pix)))
-	#logger.info("             or rounded:        %d x %d" % (mean_square_pix, mean_square_pix))
-	#logger.info("      std area (pixels):        %f" % (np.std(airplane_area_pix)))
+	logger.info("      std area (normalized):    %f" % (np.std(airplane_area_norm)))
+	logger.info("     mean area (pixels):        %f" % (np.mean(airplane_area_pix)))
+	mean_square_pix = round(np.sqrt(np.mean(airplane_area_pix)))
+	logger.info("             or rounded:        %d x %d" % (mean_square_pix, mean_square_pix))
+	logger.info("      std area (pixels):        %f" % (np.std(airplane_area_pix)))
 
 
 
@@ -153,3 +164,4 @@ def main():
 
 if __name__ == "__main__":
 	main()
+

@@ -53,79 +53,6 @@ import csv
 """
 
 
-# def get_images_from_filename_array(coords,chips,classes,folder_names,res=(250,250)):
-#     """
-#     Gathers and chips all images within a given folder at a given resolution.
-
-#     Args:
-#         coords: an array of bounding box coordinates
-#         chips: an array of filenames that each coord/class belongs to.
-#         classes: an array of classes for each bounding box
-#         folder_names: a list of folder names containing images
-#         res: an (X,Y) tuple where (X,Y) are (width,height) of each chip respectively
-
-#     Output:
-#         images, boxes, classes arrays containing chipped images, bounding boxes, and classes, respectively.
-#     """
-
-#     images =[]
-#     boxes = []
-#     clses = []
-
-#     k = 0
-#     bi = 0   
-    
-#     for folder in folder_names:
-#         fnames = glob.glob(folder + "*.tif")
-#         fnames.sort()
-#         for fname in tqdm(fnames):
-#             #Needs to be "X.tif" ie ("5.tif")
-#             name = fname.split("\\")[-1]
-#             arr = wv.get_image(fname)
-            
-#             img,box,cls = wv.chip_image(arr,coords[chips==name],classes[chips==name],res)
-
-#             for im in img:
-#                 images.append(im)
-#             for b in box:
-#                 boxes.append(b)
-#             for c in cls:
-#                 clses.append(cls)
-#             k = k + 1
-            
-#     return images, boxes, clses
-
-# def shuffle_images_and_boxes_classes(im,box,cls):
-#     """
-#     Shuffles images, boxes, and classes, while keeping relative matching indices
-
-#     Args:
-#         im: an array of images
-#         box: an array of bounding box coordinates ([xmin,ymin,xmax,ymax])
-#         cls: an array of classes
-
-#     Output:
-#         Shuffle image, boxes, and classes arrays, respectively
-#     """
-#     assert len(im) == len(box)
-#     assert len(box) == len(cls)
-    
-#     perm = np.random.permutation(len(im))
-#     out_b = {}
-#     out_c = {}
-    
-#     k = 0 
-#     for ind in perm:
-#         out_b[k] = box[ind]
-#         out_c[k] = cls[ind]
-#         k = k + 1
-#     return im[perm], out_b, out_c
-
-'''
-Datasets
-_multires: multiple resolutions. Currently [(500,500),(400,400),(300,300),(200,200)]
-_aug: Augmented dataset
-'''
 
 def main():
     parser = argparse.ArgumentParser()
@@ -161,19 +88,18 @@ def main():
     #resolutions should be largest -> smallest.  We take the number of chips in the largest resolution and make
     #sure all future resolutions have less than 1.5times that number of images to prevent chip size imbalance.
     #res = [(500,500),(400,400),(300,300),(200,200)]
-    res = [(256,256)]
-    accepted_classes = [11,12,13]
-    w_h_threshold = 0.05
+    res = [(512,512)]
+    # accepted_classes = [11,12,13]
+    accepted_classes = [13]
+    w_h_threshold = 0.15
 
-    AUGMENT = False #args.augment
+    #AUGMENT = False #args.augment
     SAVE_IMAGES = False
-    #images = {}
-    #boxes = {}
-    train_chips = 0
-    test_chips = 0
+    #train_chips = 0
+    #test_chips = 0
 
     #Parameters
-    max_chips_per_res = 100000
+    #max_chips_per_res = 100000
     #train_writer = tf.python_io.TFRecordWriter("../../data/xview/temp_mini_train_crops/xview_train_%s.record" % args.suffix)
     #test_writer = tf.python_io.TFRecordWriter("../../data/xview/temp_mini_train_crops/xview_test_%s.record" % args.suffix)
 
@@ -192,25 +118,28 @@ def main():
 
     with open(args.output_file, "w") as output_file:
         for res_ind, it in enumerate(res):
-            tot_box = 0
+            #tot_box = 0
             logging.info("Res: %s" % str(it))
-            ind_chips = 0
+            #ind_chips = 0
 
             fnames = glob.glob(args.input_folder +"/*.tif")
             fnames.sort()
 
-            logger.info("Reading in .tif images")
+            logger.info("Reading in {} .tif images from {}".format(len(fnames), args.input_folder))
             for fname in tqdm(fnames):
                 #Needs to be "X.tif", ie ("5.tif")
                 #Be careful!! Depending on OS you may need to change from '/' to '\\'.  Use '/' for UNIX and '\\' for windows
                 name = fname.split("/")[-1]
                 arr = wv.get_image(fname)
 
+                if len(arr.shape) < 3:
+                    continue
+                
                 im,box,classes_final = wv.chip_image(arr,coords[chips==name],classes[chips==name],it)
 
                 #Shuffle images & boxes all at once. Comment out the line below if you don't want to shuffle images
                 #im,box,classes_final = shuffle_images_and_boxes_classes(im,box,classes_final)
-                split_ind = int(im.shape[0] * args.test_percent)
+                #split_ind = int(im.shape[0] * args.test_percent)
 
                 for idx, image in enumerate(im):
                     # tf_example = tfr.to_tf_example(image,box[idx],classes_final[idx])
@@ -324,75 +253,19 @@ def main():
                     output_counter += 1
 
 
-                    #Check to make sure that the TF_Example has valid bounding boxes.  
-                    #If there are no valid bounding boxes, then don't save the image to the TFRecord.
-                    # float_list_value = tf_example.features.feature['image/object/bbox/xmin'].float_list.value
-                    
-                    # if (ind_chips < max_chips_per_res and np.array(float_list_value).any()):
-                    #     tot_box+=np.array(float_list_value).shape[0]
-                        
-                    #     if idx < split_ind:
-                    #         #test_writer.write(tf_example.SerializeToString())
-                    #         test_chips+=1
-                    #     else:
-                    #         #train_writer.write(tf_example.SerializeToString())
-                    #         train_chips += 1
-        
-                    #     ind_chips +=1
+            # if res_ind == 0:
+            #     max_chips_per_res = int(ind_chips * 1.5)
+            #     logging.info("Max chips per resolution: %s " % max_chips_per_res)
 
-                    #     #Make augmentation probability proportional to chip size.  Lower chip size = less chance.
-                    #     #This makes the chip-size imbalance less severe.
-                    #     prob = np.random.randint(0,np.max(res))
-                    #     #for 200x200: p(augment) = 200/500 ; for 300x300: p(augment) = 300/500 ...
+            # logging.info("Tot Box: %d" % tot_box)
+            # logging.info("Chips: %d" % ind_chips)
 
-                    #     if AUGMENT and prob < it[0]:
-                            
-                    #         for extra in range(3):
-                    #             center = np.array([int(image.shape[0]/2),int(image.shape[1]/2)])
-                    #             deg = np.random.randint(-10,10)
-                    #             #deg = np.random.normal()*30
-                    #             newimg = aug.salt_and_pepper(aug.gaussian_blur(image))
-
-                    #             #.3 probability for each of shifting vs rotating vs shift(rotate(image))
-                    #             p = np.random.randint(0,3)
-                    #             if p == 0:
-                    #                 newimg,nb = aug.shift_image(newimg,box[idx])
-                    #             elif p == 1:
-                    #                 newimg,nb = aug.rotate_image_and_boxes(newimg,deg,center,box[idx])
-                    #             elif p == 2:
-                    #                 newimg,nb = aug.rotate_image_and_boxes(newimg,deg,center,box[idx])
-                    #                 newimg,nb = aug.shift_image(newimg,nb)
-                                    
-
-                    #             newimg = (newimg).astype(np.uint8)
-
-                    #             if idx%1000 == 0 and SAVE_IMAGES:
-                    #                 Image.fromarray(newimg).save('../../data/xview/temp_mini_train_crops/img_%s_%s_%s.png'%(name,extra,it[0]))
-
-                    #             if len(nb) > 0:
-                    #                 tf_example = tfr.to_tf_example(newimg,nb,classes_final[idx])
-
-                    #                 #Don't count augmented chips for chip indices
-                    #                 if idx < split_ind:
-                    #                     #test_writer.write(tf_example.SerializeToString())
-                    #                     test_chips += 1
-                    #                 else:
-                    #                     #train_writer.write(tf_example.SerializeToString())
-                    #                     train_chips+=1
-                    #             else:
-                    #                 if SAVE_IMAGES:
-                    #                     aug.draw_bboxes(newimg,nb).save('../../data/xview/temp_mini_train_crops/img_nobox_%s_%s_%s.png'%(name,extra,it[0]))
-            if res_ind == 0:
-                max_chips_per_res = int(ind_chips * 1.5)
-                logging.info("Max chips per resolution: %s " % max_chips_per_res)
-
-            logging.info("Tot Box: %d" % tot_box)
-            logging.info("Chips: %d" % ind_chips)
-
-        logging.info("saved: %d train chips" % train_chips)
-        logging.info("saved: %d test chips" % test_chips)
+        # logging.info("saved: %d train chips" % train_chips)
+        # logging.info("saved: %d test chips" % test_chips)
         #train_writer.close()
-        #test_writer.close() 
+        #test_writer.close()
+
+    logger.info("saved {} chips in {} ".format(output_counter, args.output_folder)) 
 
 if __name__ == "__main__":
     main()
