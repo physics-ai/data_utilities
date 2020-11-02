@@ -120,11 +120,28 @@ def chip_image(img,coords,classes,shape=(300,300)):
     k = 0
     for i in range(w_num):
         for j in range(h_num):
+            # compute area of bb within crop 
+            #area_bb_crop = (out[:,2] - out[:,0])*(out[:,3] - out[:,1])
+            # compute original area of 
+            #original_bb_area = (coords[:,2] - coords[:,0])*(coords[:,3] - coords[:,1])
+            #original_bb_area = original_bb_area[x][y]
+            # compare areas - needs to be above a threshold. Or can compute center of bounding box here
+            center_obj_x = (coords[:,2] + coords[:,0])/2.0
+
             x = np.logical_or( np.logical_and((coords[:,0]<((i+1)*wn)),(coords[:,0]>(i*wn))),
                                np.logical_and((coords[:,2]<((i+1)*wn)),(coords[:,2]>(i*wn))))
+            center_x = np.logical_and((center_obj_x<((i+1)*wn)),(center_obj_x>(i*wn)))
+            x = x * center_x
+            # (center_obj_x<((i+1)*wn)),(center_obj_x>(i*wn))
+
             out = coords[x]
             y = np.logical_or( np.logical_and((out[:,1]<((j+1)*hn)),(out[:,1]>(j*hn))),
                                np.logical_and((out[:,3]<((j+1)*hn)),(out[:,3]>(j*hn))))
+            center_obj_y = (out[:,3] + out[:,1])/2.0
+            center_y = np.logical_and((center_obj_y<((j+1)*hn)),(center_obj_y>(j*hn)))
+            y = y * center_y
+            # (center_obj_y<((j+1)*hn)),(center_obj_y>(j*hn))
+
             outn = out[y]
             out = np.transpose(np.vstack((np.clip(outn[:,0]-(wn*i),0,wn),
                                           np.clip(outn[:,1]-(hn*j),0,hn),

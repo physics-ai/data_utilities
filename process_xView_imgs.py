@@ -88,10 +88,10 @@ def main():
     #resolutions should be largest -> smallest.  We take the number of chips in the largest resolution and make
     #sure all future resolutions have less than 1.5times that number of images to prevent chip size imbalance.
     #res = [(500,500),(400,400),(300,300),(200,200)]
-    res = [(512,512)]
+    res = [(1024,1024)]
     # accepted_classes = [11,12,13]
     accepted_classes = [13]
-    w_h_threshold = 0.15
+    w_h_threshold = 0.01
 
     #AUGMENT = False #args.augment
     SAVE_IMAGES = False
@@ -130,6 +130,7 @@ def main():
                 #Needs to be "X.tif", ie ("5.tif")
                 #Be careful!! Depending on OS you may need to change from '/' to '\\'.  Use '/' for UNIX and '\\' for windows
                 name = fname.split("/")[-1]
+                original_tif_num = name.split('.')[0]
                 arr = wv.get_image(fname)
 
                 if len(arr.shape) < 3:
@@ -183,7 +184,7 @@ def main():
                         continue
 
                     # now can start saving the info
-                    im_path = os.path.join(args.output_folder, "frame%08d.jpg" % (output_counter))
+                    im_path = os.path.join(args.output_folder, "frame%s-%06d.jpg" % (original_tif_num, output_counter))
                     #if not np.all(box_np_bool):
                         #logger.info(im_path)
                         #logger.info(name)
