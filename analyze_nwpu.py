@@ -107,8 +107,8 @@ def main():
 					assert len(fields) == 5, "Problem with file %s" % (fname)
 
 					output_fields = []
-					# Only use the bounding boxes that are for airplanes. 1==airplane
-					if int(fields[4]) == 1: 
+					# Only use the bounding boxes that are for airplanes. 1==airplane, 2==ship
+					if int(fields[4]) == 2: 
 						# get image as np array
 						file_ending = fname.split('/')[-1]
 						file_num = file_ending.replace('.txt','')
