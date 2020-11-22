@@ -91,7 +91,7 @@ def main():
     res = [(256,256)]
     # accepted_classes = [11,12,13]
     # accepted_classes = [40, 50, 51] # ships!
-    accepted_classes = [41, 42, 44, 47] # Motorboat, sailboats, tugboats, fishing vessels
+    accepted_classes = [40, 41, 42, 44, 45, 47, 49, 50, 51, 52] # Motorboat, sailboats, tugboats, fishing vessels
     #accepted_classes = [50] # Yacht
     w_h_threshold = 0.0005
 
@@ -126,6 +126,8 @@ def main():
 
             fnames = glob.glob(args.input_folder +"/*.tif")
             fnames.sort()
+
+            #fnames = ['/home/physicsai/sim2real/data/xview/train_images/2545.tif']
 
             logger.info("Reading in {} .tif images from {}".format(len(fnames), args.input_folder))
             for fname in tqdm(fnames):

@@ -257,21 +257,13 @@ def chip_image_smart(img,coords,classes,shape=(300,300)):
             object_in_box = x * y
             object_completely_in_box = both_sides_in * both_top_n_bottom_in
             object_partially_in_box = (object_in_box) & ~(object_completely_in_box)
-            # print("object_in_box:            ", object_in_box)
-            # print("object_completely_in_box: ", object_completely_in_box)
-            # print("object_partially_in_box:  ", object_partially_in_box)
             
 
             # now check if object is partially on bottom
             partial_left_edges = (~left_edge_in_box) * object_partially_in_box
-            # print("True here means left edge is not in box:   ", partial_left_edges)
             partial_right_edges = (~right_edge_in_box) * object_partially_in_box
-            # print("True here means right edge is not in box:  ", partial_right_edges)
             partial_top_edges = (~top_edge_in_box) * object_partially_in_box
-            # print("True here means top edge is not in box:    ", partial_top_edges)
             partial_bottom_edges = (~bottom_edge_in_box) * object_partially_in_box
-            # print("True here means bottom edge is not in box: ", partial_bottom_edges)
-            # print("")
 
             # can check if right and bottom have true in them. If true, add some amount... 
             # then have to check again for any partials. Might be easiest to get bool vectors from function
@@ -279,18 +271,14 @@ def chip_image_smart(img,coords,classes,shape=(300,300)):
             w_off, h_off = 0, 0
             if np.any(partial_right_edges):
                 # calculate the width of the object that is on right edge
-                # print("coords for partial obj: ", coords[partial_right_edges])
                 partial_objs = coords[partial_right_edges]
                 distance_to_edge = np.max(partial_objs[:,2] - (wn*(i+1)))
-                # print("distance_to_edge: ", distance_to_edge)
                 # choose random number between distance_to_edge and int(width/3)
                 if int(wn/3.0) < distance_to_edge:
                     w_off = random.randint(distance_to_edge, distance_to_edge+10)
                 else:
                     w_off = random.randint(distance_to_edge, int(wn/3.0))
-                # print("w_off: ", w_off)
             if np.any(partial_bottom_edges):
-                # print("coords for partial obj: ", coords[partial_bottom_edges])
                 partial_objs = coords[partial_bottom_edges]
                 distance_to_bottom = np.max(partial_objs[:,3] - (hn*(j+1)))
                 # choose random number between distance_to_bottom and int(width/3)
@@ -298,7 +286,6 @@ def chip_image_smart(img,coords,classes,shape=(300,300)):
                     h_off = random.randint(distance_to_bottom, distance_to_bottom+10)
                 else:
                     h_off = random.randint(distance_to_bottom, int(hn/3.0))
-                # print("h_off: ", h_off)
             if w_off != 0 or h_off != 0:
                 edge_bools = check_for_objects(coords=coords, wn=wn, hn=hn, i=i, j=j, w_off=w_off, h_off=h_off)
                 left_edge_in_box, right_edge_in_box, top_edge_in_box, bottom_edge_in_box = edge_bools
@@ -316,11 +303,6 @@ def chip_image_smart(img,coords,classes,shape=(300,300)):
                 object_in_box2 = x2 * y2
                 object_completely_in_box2 = both_sides_in2 * both_top_n_bottom_in2
                 object_partially_in_box2 = (object_in_box2) & ~(object_completely_in_box2)
-                # print("object_in_box2:            ", object_in_box2)
-                # print("object_completely_in_box2: ", object_completely_in_box2)
-                # print("object_partially_in_box2:  ", object_partially_in_box2)
-                # print("any remaining partial objects: ", np.any(object_partially_in_box2))
-                # print("")
                 if not np.any(object_partially_in_box2):
                     # if we get in here, that means there are no more partially cropped objects. Yay! Use this crop. 
                     print("Replace!!!! Use the new image!!!!")
@@ -329,12 +311,13 @@ def chip_image_smart(img,coords,classes,shape=(300,300)):
 
             # ~seen_objects_bool is False if the object has been seen, True if the object has not been seen. 
             # only keep objects that haven't yet been seen........
-            object_in_box = object_in_box & ~seen_objects_bool
+            #object_in_box = object_in_box & ~seen_objects_bool
             outn = coords[object_in_box]
             # add seen objects to list:
             seen_objects_bool = object_in_box | seen_objects_bool
-            # print("seen_objects_bool: ", seen_objects_bool)
             # w_off and h_off are used to give updated coordinates
+            #w_off = 38
+            #h_off = -54
             out = np.transpose(np.vstack((np.clip(outn[:,0]-(wn*i) - w_off,0,wn),
                                           np.clip(outn[:,1]-(hn*j) - h_off,0,hn),
                                           np.clip(outn[:,2]-(wn*i) - w_off,0,wn),
